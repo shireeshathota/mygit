@@ -39,7 +39,7 @@
 						<workerType>${worker.type}</workerType>
 						<objectStoreV2>true</objectStoreV2>
 						<properties>
-							<http.port>8081</http.port>
+							<http.port>8091</http.port>
 						</properties>
 					</cloudHubDeployment>
 					<sharedLibraries>
