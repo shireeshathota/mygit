@@ -13,7 +13,8 @@ http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/fil
 		<db:my-sql-connection host="${db.host}" port="${db.port}" user="${db.user}" password="${db.password}" database="${db.database}" />
 	</db:config>
 	<configuration-properties doc:name="Configuration properties" doc:id="acb0e8d6-c090-4533-aefb-73707b33455f" file="config.yaml" />
-	<file:config name="File_Config" doc:name="File Config" doc:id="f4a54edc-b5e7-4ae8-9a02-00a5f956960e" />
+	<file:config name="File_Config" doc:name="File Config" doc:id="f4a54edc-b5e7-4ae8-9a02-00a5f956960e" >
+	</file:config>
 	<error-handler name="globalError_Handler" doc:id="59d2abab-8a3a-45cd-b0e1-ad6dac55d039" >
 		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="bde73bde-91d5-4e9c-a9bb-1cbdfd0ffa6f" type="ANY">
 			<logger level="INFO" doc:name="Logger" doc:id="d9bd1e5f-60a6-4014-9622-a969e21bbe02" message="failure"/>

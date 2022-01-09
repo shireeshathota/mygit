@@ -97,10 +97,10 @@ output application/json
 		</ee:transform>
 		<logger level="INFO" doc:name="EndLog" doc:id="c9181c9a-749e-41b3-bc4b-551523159234" message="#[payload]"/>
 	</flow>
-	<flow name="syncCarBookingDBToFile" doc:id="548c0a6e-5936-4183-a01b-57733c5a15aa" initialState="stopped">
+	<flow name="syncCarBookingDBToFile" doc:id="548c0a6e-5936-4183-a01b-57733c5a15aa">
 		<scheduler doc:name="Scheduler" doc:id="a7ab9c00-cfb1-4790-8d4a-8d8331f4729e" >
 			<scheduling-strategy >
-				<cron expression="0 0/1 * * * ?" timeZone="Asia/Kolkata"/>
+				<cron expression="0 0/10 * 1/1 * ? *" timeZone="Asia/Kolkata"/>
 			</scheduling-strategy>
 		</scheduler>
 		<logger level="INFO" doc:name="StartLog" doc:id="a9542ebf-88c9-493e-a4f8-02013a8cd1a7" message='#["Scheduler Started"]'/>
@@ -131,10 +131,11 @@ output application/json
 		<db:select doc:name="FetchOlaDetails" doc:id="fd5e6fd6-2e33-430e-8aaf-c261d7bd5c31" config-ref="Database_Config">
 			<db:sql><![CDATA[select CustomerName,Contact_details,Vendor_Name,Vendor_ID,Car_model,Source,Destination,Cartype,price,Payment_mode,Driver_Name from CarCustsBD where Vendor_ID=1]]></db:sql>
 		</db:select>
-		<file:write doc:name="OlaData.csv" doc:id="11fdfb86-3e3c-4369-a349-622a8a4a67ff" config-ref="File_Config" path="C:\Users\shireeshasthota\Documents\main_assignment\carbooking\src\main\resources\OlaBookings.csv" mode="APPEND">
-			<file:content><![CDATA[#[output application/csv header=false --- payload]]]></file:content>
+		<file:write doc:name="OlaData.csv" doc:id="11fdfb86-3e3c-4369-a349-622a8a4a67ff" config-ref="File_Config" path="${mule.home}/apps/${app.name}/src/main/resources/OlaBookings.csv" mode="APPEND">
+			<file:content><![CDATA[#[output application/csv header=true --- payload]]]></file:content>
 		</file:write>
-		<file:read doc:name="ReadData" doc:id="bfa7dfbe-de26-4f1c-8fa7-80785e0965ec" config-ref="File_Config" path="C:\Users\shireeshasthota\Documents\main_assignment\carbooking\src\main\resources\OlaBookings.csv" />
+		<logger level="INFO" doc:name="Logger" doc:id="b2941c2f-22d4-4c33-a72e-3f92cdac1d84" message="${mule.home}/apps/${app.name}/src/main/resources/OlaBookings.csv"/>
+		<file:read doc:name="ReadData" doc:id="bfa7dfbe-de26-4f1c-8fa7-80785e0965ec" config-ref="File_Config" path="${mule.home}/apps/${app.name}/src/main/resources/OlaBookings.csv" />
 		<email:send doc:name="SentEmail" doc:id="8bfd85d8-e2f4-416a-ae2f-bf76caade9aa" config-ref="Email_SMTP" fromAddress="shireesha.s.thota@apisero.com" subject="ProviderDetailsList">
 			<email:to-addresses>
 				<email:to-address value="uppiretla.a.mallika@apisero.com" />
@@ -152,10 +153,11 @@ output application/json
 		<db:select doc:name="FetchUberDetails" doc:id="5b83f5da-38ac-4391-a062-9c9718c659a8" config-ref="Database_Config" >
 			<db:sql ><![CDATA[select CustomerName,Contact_details,Vendor_Name,Vendor_ID,Car_model,Source,Destination,Cartype,price,Payment_mode,Driver_Name from CarCustsBD where Vendor_ID=2]]></db:sql>
 		</db:select>
-		<file:write doc:name="UberData.csv" doc:id="8b13b12b-2a30-42c6-bc3d-4785ded7f470" config-ref="File_Config" path="C:\Users\shireeshasthota\Documents\main_assignment\carbooking\src\main\resources\UberBookings.csv" mode="APPEND">
-			<file:content><![CDATA[#[output application/csv header=false --- payload]]]></file:content>
+		<file:write doc:name="UberData.csv" doc:id="8b13b12b-2a30-42c6-bc3d-4785ded7f470" config-ref="File_Config" path="${mule.home}/apps/${app.name}/src/main/resources/UberBookings.csv" mode="APPEND">
+			<file:content><![CDATA[#[output application/csv header=true --- payload]]]></file:content>
 		</file:write>
-		<file:read doc:name="ReadData" doc:id="b3fb401a-fada-4573-b8a5-661f132e98fb" config-ref="File_Config" path="C:\Users\shireeshasthota\Documents\main_assignment\carbooking\src\main\resources\UberBookings.csv"/>
+		<logger level="INFO" doc:name="Logger" doc:id="65a56a97-ba74-450b-a3e9-e2405f16219a" message="${mule.home}/apps/${app.name}/src/main/resources/UberBookings.csv"/>
+		<file:read doc:name="ReadData" doc:id="b3fb401a-fada-4573-b8a5-661f132e98fb" config-ref="File_Config" path="${mule.home}/apps/${app.name}/src/main/resources/UberBookings.csv"/>
 		<email:send doc:name="SentEmail" doc:id="f959198c-94b3-481a-948e-198d736cc397" config-ref="Email_SMTP" fromAddress="shireesha.s.thota@apisero.com" subject="ProviderDetailsList" >
 			<email:to-addresses >
 				<email:to-address value="uppiretla.a.mallika@apisero.com" />
