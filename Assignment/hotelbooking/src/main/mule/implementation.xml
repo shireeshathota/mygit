@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:apikit-soap="http://www.mulesoft.org/schema/mule/apikit-soap" xmlns:wsc="http://www.mulesoft.org/schema/mule/wsc"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/wsc http://www.mulesoft.org/schema/mule/wsc/current/mule-wsc.xsd
+http://www.mulesoft.org/schema/mule/apikit-soap http://www.mulesoft.org/schema/mule/apikit-soap/current/mule-apikit-soap.xsd">
+	<flow name="GetListOfAllHotels" doc:id="8b80ceff-985e-4d8e-86e2-faf3ecb9fe86" >
+		<logger level="INFO" doc:name="StartLog" doc:id="51a1c307-402d-4f45-bfc2-aae7c534d71f" message="GetAllHotel Flow started"/>
+		<db:select doc:name="FetchHotels" doc:id="aa5cd896-f58b-459b-91b1-5948dc0a2df4" config-ref="Database_Config">
+			<db:sql ><![CDATA[select H_ID,H_Name,Rating,Location,Num_of_rooms,price,contact_details,Email from  HotelBD]]></db:sql>
+		</db:select>
+		<ee:transform doc:name="HotelsDetails" doc:id="803bbdc3-41c1-4365-aa59-97a5edaa230b" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/xml
+ns ns0 http://www.bookmyhotel.org/hotel/---
+{
+	ns0#getAllhotelbookingsResponse:{
+ns0#Hotel: payload map(hotel, indexOfhotel)-> {
+	hotelId: hotel.HOTEL_ID,
+	hotelName: hotel.HOTEL_NAME,
+	mobileNo: hotel.MOBILE_NO,
+	email: hotel.EMAIL,
+	rating: hotel.RATING,
+	location: hotel.LOCATION,
+	NumberOfSeats: hotel.NUMBER_OF_SEATS,
+	price: hotel.PRICE
+	}
+	
+	}
+} ]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="EndLog" doc:id="39ef32eb-6a75-4d68-978d-b20fe05ec237" message="GetAllHotel Flow Ended"/>
+	</flow>
+	<flow name="GetHotelsByID" doc:id="574d36d0-2599-4e15-a061-536912ad7b81" >
+		<logger level="INFO" doc:name="StartLog" doc:id="e713408d-7282-483c-8395-9ff095fa00dc" message="GetHotelsByName Flow started" />
+		<db:select doc:name="FetchHotelsByID" doc:id="ba4f5b0e-7e44-48bc-b8a9-19f817c35334" config-ref="Database_Config">
+			<db:sql ><![CDATA[select * from HotelBD where H_ID=:hotelid]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	hotelid: attributes.uriParams.ID
+}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="HotelsDetails" doc:id="3612e12d-66c2-492e-96d2-8f728f0ca592" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/xml
+ns ns0 http://www.bookmyhotel.org/hotel/
+---
+{ ns0#getAllhotelbookingsResponse:{
+ns0#Hotel: payload map ( payload01 , indexOfPayload01 ) -> {
+	Hotel_id: payload01.H_ID,
+	Hotel_Name: payload01.H_Name,
+	Rating: payload01.Rating,
+	Location: payload01.Location,
+	NoOfRoomsAvailable: payload01.Num_of_rooms,
+	PricePerRoom: payload01.price,
+	ContactDetails: payload01.contact_details as String,
+	Email: payload01.Email
+} 
+}
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="EndLog" doc:id="ef0fb909-1eb6-411d-826a-bc30847af21a" message="GetHotelsByName Flow Ended" />
+	</flow>
+	<flow name="CancelHotelBooking" doc:id="89e3f3b3-cee9-4947-bad7-bdf408a8d4fb" >
+		<logger level="INFO" doc:name="StartLog" doc:id="49d99bfc-9c17-4d2d-a29a-487c07984185" />
+		<db:select doc:name="CheckHotelID" doc:id="a1aa009e-0868-44dd-a686-43d6682b10d1" queryTimeoutUnit="MINUTES" target="hotelId" config-ref="Database_Config">
+			<db:sql ><![CDATA[select H_ID,H_NAME,FirstName,LastName from CustsHotelBD where H_ID=:hotelid]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	hotelid: message.attributes.uriParams.ID
+}]]]></db:input-parameters>
+		</db:select>
+		<choice doc:name="Choice" doc:id="951e778f-c5e7-4bc2-8018-4ebdbed21652" >
+			<when expression="#[vars.hotelId.H_ID != null]">
+				<db:delete doc:name="cancel hotel booking" doc:id="cb6b060a-0756-48e6-8dea-88bbd5df07b8" config-ref="Database_Config">
+					<db:sql ><![CDATA[delete from CustsHotelBD where H_ID=:hotelid]]></db:sql>
+					<db:input-parameters ><![CDATA[#[{
+	hotelid: vars.hotelId[0].H_ID
+}]]]></db:input-parameters>
+				</db:delete>
+				<ee:transform doc:name="status" doc:id="262d2d10-0e9c-45bb-ba62-bff9bb7c91aa" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/xml
+ns ns0 http://www.bookmyhotel.org/hotel/
+---
+{
+	
+	ns0#deleteHotelBookingResponse: {
+		hotelbookingId: vars.hotelId[0].H_ID,
+		status: "Hotel Booking Cancelled Successfully."
+	}
+} ]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<otherwise >
+				<ee:transform doc:name="Not valid" doc:id="e7d57213-4a35-4062-aedd-419cd6bdc514" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+ns ns0 http://www.bookmyhotel.org/hotel/
+---
+{
+	
+	ns0#deleteHotelBookingResponse: {
+		hotelbookingId: vars.hotelId.H_ID as Number,
+		status: "Hotel ID is not valid.",
+	}
+} ]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</otherwise>
+		</choice>
+		<logger level="INFO" doc:name="EndLog" doc:id="314fa331-d347-41b7-a778-100cf1ecfaae" message="#[payload]"/>
+	</flow>
+	<flow name="CreateCustBooking" doc:id="62c5c100-6993-40c6-a256-4769008f1093" initialState="started">
+		<logger level="INFO" doc:name="StartLog" doc:id="cd2e8026-d5d0-4024-9791-351be1df882c" />
+		<db:select doc:name="MaxCustID" doc:id="c3a28098-a27b-48c2-9b31-49f0ead1f64e" config-ref="Database_Config">
+			<db:sql ><![CDATA[select Max(Cust_id) as CUSTID from CustsHotelBD]]></db:sql>
+		</db:select>
+		<set-variable value="#[payload.CUSTID[0] + 1 default 1]" doc:name="IncrementBy1" doc:id="130ce4b7-726e-43ec-b253-7538b0d2aabf" variableName="CustomerID" />
+		<db:insert doc:name="InsertCustomer_Data" doc:id="ae2b5d1a-67c3-4482-a50c-aed86ffb7ddc" config-ref="Database_Config">
+			<db:sql ><![CDATA[insert into CustsHotelBD
+(Cust_id,FirstName,LastName,Email_Id,Mobileno,H_ID,H_Name,Location,price) values
+(:custid,:fname,:lname,:email,:mobileno,:hotelid,:hotelname,:location,:price)]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+    custid: vars.CustomerID,
+    fname: vars.hotelbook.FirstName,
+	lname :vars.hotelbook.LastName,
+	email :vars.hotelbook.Email_Id,
+	mobileno:vars.hotelbook.Mobile_No,
+	hotelid:vars.hotelbook.Hotel_ID,
+	hotelname:vars.hotelbook.Hotel_Name,
+	location:vars.hotelbook.Location,
+	price:vars.hotelbook.Price,
+	
+}]]]></db:input-parameters>
+		</db:insert>
+		<ee:transform doc:name="Transform Message" doc:id="5cf1a27f-c499-47a4-a105-81a708cd4ed1" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/xml
+ns ns0 http://www.bookmyhotel.org/hotel/
+---
+{
+	ns0#addCustHotelBookingResponse:{
+	CustomerHotelBooking: if(payload.affectedRows >= 1)
+	{
+	
+	CustomerID: vars.CustomerID,
+	CustomerName: vars.hotelbook.FirstName,
+	CustomerEmail: vars.hotelbook.Email_Id,
+	HotelName: vars.hotelbook.Hotel_Name,
+	Status:"Hotel is booked Successfully!!!"
+	
+	}
+	else
+	 Status:"Hotel booking failed!!!"
+	}
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="EndLog" doc:id="9f67c85a-5c5b-4252-9bda-7c9769d5d5f5" message="#[payload]"/>
+	</flow>
+</mule>
